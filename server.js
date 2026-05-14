@@ -1,6 +1,8 @@
 import express from "express";
 import mongoose from "mongoose";
+import MongoDB from "./db.js";
 
+MongoDB();
 const PORT = process.env.PORT || 8000;
 const app = express();
 
