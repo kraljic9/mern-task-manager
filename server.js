@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import MongoDB from "./db.js";
 import userRouter from "./routes/user.js";
+import taskRouter from "./routes/task.js";
 
 MongoDB();
 const PORT = process.env.PORT || 8000;
@@ -9,6 +10,7 @@ const app = express();
 
 app.use(express.json());
 app.use("/user", userRouter);
+app.use("/task", taskRouter);
 
 app.get("/", (req, res) => {
   res.send("Hello server");
