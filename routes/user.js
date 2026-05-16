@@ -5,11 +5,12 @@ import bcrypt from "bcrypt";
 
 const router = express.Router();
 
+// Register user
 router.post("/register", async (req, res) => {
   try {
-    const { username, email, passwrod } = req.body;
+    const { username, email, password } = req.body;
 
-    if (!username && !email && !passwrod) {
+    if (!username || !email || !passwrod) {
       return res.status(400).json({ message: `Error invalid credidentals` });
     }
 
@@ -25,18 +26,19 @@ router.post("/register", async (req, res) => {
       password,
     });
 
-    res.status(201).json(user);
+    res.status(201).json({ user });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: `Server error`, err });
   }
 });
 
-router.post("login", async (req, res) => {
+// Login user
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    if (!email && !password) {
+    if (!email || !password) {
       return res.status(400).json({ message: `Error invalid credidentals` });
     }
 
@@ -48,12 +50,12 @@ router.post("login", async (req, res) => {
         .json({ message: `Error invalid email, user not found` });
     }
 
-    const isValid = await bcrypt.compare(user.password, password);
+    const isValid = await bcrypt.compare(password, user.password);
 
     if (!isValid) {
       return res
         .status(400)
-        .json({ message: `Error invalid email, user not found` });
+        .json({ message: `Error invalid password, user not found` });
     }
 
     res.status(200).json({ message: "User logged in", user });
