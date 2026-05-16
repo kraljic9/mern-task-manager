@@ -2,6 +2,7 @@ import User from "../models/user.js";
 import mongoose from "mongoose";
 import express from "express";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 
 const router = express.Router();
 
@@ -26,7 +27,11 @@ router.post("/register", async (req, res) => {
       password,
     });
 
-    res.status(201).json({ user });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    res.status(201).json({ user, token });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: `Server error`, err });
@@ -58,7 +63,11 @@ router.post("/login", async (req, res) => {
         .json({ message: `Error invalid password, user not found` });
     }
 
-    res.status(200).json({ message: "User logged in", user });
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    res.status(200).json({ message: "User logged in", user, token });
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: `Server error`, err });
