@@ -11,7 +11,7 @@ router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
-    if (!username || !email || !passwrod) {
+    if (!username || !email || !password) {
       return res.status(400).json({ message: `Error invalid credidentals` });
     }
 
@@ -27,7 +27,7 @@ router.post("/register", async (req, res) => {
       password,
     });
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    const token = await jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
@@ -63,7 +63,7 @@ router.post("/login", async (req, res) => {
         .json({ message: `Error invalid password, user not found` });
     }
 
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    const token = await jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
