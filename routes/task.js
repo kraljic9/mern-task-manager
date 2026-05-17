@@ -81,7 +81,7 @@ router.put("/:id", async (req, res) => {
 
     const newTask = await task.save();
 
-    res.status(201).json(newTask);
+    res.status(200).json(newTask);
   } catch (err) {
     console.log(err);
     res.status(500).json({ message: `Server error`, err });
@@ -89,5 +89,24 @@ router.put("/:id", async (req, res) => {
 });
 
 // Delete task
+
+router.delet("/:id", auth, async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const task = Task.findById(id);
+
+    if (!task) {
+      return res.status(400).json(`Error task with id ${id} does not exists`);
+    }
+
+    task.deleteOne();
+
+    res.status(200).json(newTask);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: `Server error`, err });
+  }
+});
 
 export default router;
