@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import Task from "../models/task.js";
 import auth from "../middleware/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { taskSchema } from "../validations/pathSchema.js";
 
 // Setup router
 
@@ -14,7 +15,7 @@ router.get(
   "/",
   auth,
   asyncHandler(async (req, res) => {
-    const posts = await Task.find();
+    const posts = await Task.find({ user: req.user });
     res.status(200).json({ posts });
   }),
 );
@@ -45,13 +46,7 @@ router.post(
   "/",
   auth,
   asyncHandler(async (req, res) => {
-    const { title } = req.body;
-
-    if (!title) {
-      const error = new Error("Error invalid credidentals");
-      error.statusCode = 400;
-      throw error;
-    }
+    const { title } = taskSchema.parse(req.body);
 
     const user = await Task.create({
       title,
@@ -65,14 +60,11 @@ router.post(
 
 router.put(
   "/:id",
+  auth,
   asyncHandler(async (req, res) => {
-    const { title, completed } = req.user;
+    const { title, completed } = taskSchema.parse(req.body);
 
-    if (!title || !completed) {
-      const error = new Error(`Error task with id ${id} does not exists`);
-      error.statusCode = 400;
-      throw error;
-    }
+    const id = req.params.id;
 
     const task = await Task.findById(id);
 
@@ -99,13 +91,13 @@ router.put(
 
 // Delete task
 
-router.delet(
+router.delete(
   "/:id",
   auth,
   asyncHandler(async (req, res) => {
     const id = req.params.id;
 
-    const task = Task.findById(id);
+    const task = await Task.findById(id);
 
     if (!task) {
       const error = new Error(`Error task with id ${id} does not exists`);
@@ -121,7 +113,7 @@ router.delet(
 
     await task.deleteOne();
 
-    res.status(200).json(newTask);
+    res.status(200).json("Task has been deleted");
   }),
 );
 
