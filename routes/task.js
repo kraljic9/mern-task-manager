@@ -2,6 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import Task from "../models/task.js";
 import auth from "../middleware/auth.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 // Setup router
 
@@ -9,43 +10,47 @@ const router = express.Router();
 
 // Get tasks
 
-router.get("/", auth, async (req, res) => {
-  try {
+router.get(
+  "/",
+  auth,
+  asyncHandler(async (req, res) => {
     const posts = await Task.find();
     res.status(200).json({ posts });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: `Server error`, err });
-  }
-});
+  }),
+);
 
 // Get individual task
 
-router.get("/:id", auth, async (req, res) => {
-  try {
+router.get(
+  "/:id",
+  auth,
+  asyncHandler(async (req, res) => {
     const id = req.params.id;
 
     const task = await Task.findById(id);
 
     if (!task) {
-      return res.status(400).json(`Error task with id ${id} does not exists`);
+      const error = new Error(`Error task with id ${id} does not exists`);
+      error.statusCode = 400;
+      throw error;
     }
 
     res.status(200).json(task);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: `Server error`, err });
-  }
-});
+  }),
+);
 
 // Create task
 
-router.post("/", auth, async (req, res) => {
-  try {
+router.post(
+  "/",
+  auth,
+  asyncHandler(async (req, res) => {
     const { title } = req.body;
 
     if (!title) {
-      res.status(400).json({ message: "Error invaild credidentals" });
+      const error = new Error("Error invalid credidentals");
+      error.statusCode = 400;
+      throw error;
     }
 
     const user = await Task.create({
@@ -54,59 +59,70 @@ router.post("/", auth, async (req, res) => {
     });
 
     res.status(201).json(user);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: `Server error`, err });
-  }
-});
+  }),
+);
 // Edit task
 
-router.put("/:id", async (req, res) => {
-  try {
+router.put(
+  "/:id",
+  asyncHandler(async (req, res) => {
     const { title, completed } = req.user;
 
     if (!title || !completed) {
-      res.status(400).json({ message: `Error invalid credidentals` });
+      const error = new Error(`Error task with id ${id} does not exists`);
+      error.statusCode = 400;
+      throw error;
     }
 
     const task = await Task.findById(id);
 
     if (!task) {
-      return res.status(400).json(`Error task with id ${id} does not exists`);
+      const error = new Error("Access denied, this is not your task");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    if (task.user.toString() !== req.user) {
+      const error = new Error("Access denied, this is not your task");
+      error.statusCode = 403;
+      throw error;
     }
 
     task.title = title || task.title;
-    if (task.completed === undefined)
-      task.completed ? completed : task.completed;
+    if (task.completed !== undefined) task.completed = completed;
 
     const newTask = await task.save();
 
     res.status(200).json(newTask);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: `Server error`, err });
-  }
-});
+  }),
+);
 
 // Delete task
 
-router.delet("/:id", auth, async (req, res) => {
-  try {
+router.delet(
+  "/:id",
+  auth,
+  asyncHandler(async (req, res) => {
     const id = req.params.id;
 
     const task = Task.findById(id);
 
     if (!task) {
-      return res.status(400).json(`Error task with id ${id} does not exists`);
+      const error = new Error(`Error task with id ${id} does not exists`);
+      error.statusCode = 400;
+      throw error;
     }
 
-    task.deleteOne();
+    if (task.user.toString() !== req.user) {
+      const error = new Error("Access denied, this is not your task");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    await task.deleteOne();
 
     res.status(200).json(newTask);
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: `Server error`, err });
-  }
-});
+  }),
+);
 
 export default router;
