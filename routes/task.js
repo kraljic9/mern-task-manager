@@ -69,7 +69,7 @@ router.put("/:id", async (req, res) => {
       res.status(400).json({ message: `Error invalid credidentals` });
     }
 
-    const task = Task.findById(id);
+    const task = await Task.findById(id);
 
     if (!task) {
       return res.status(400).json(`Error task with id ${id} does not exists`);
@@ -79,7 +79,7 @@ router.put("/:id", async (req, res) => {
     if (task.completed === undefined)
       task.completed ? completed : task.completed;
 
-    const newTask = task.save();
+    const newTask = await task.save();
 
     res.status(201).json(newTask);
   } catch (err) {
