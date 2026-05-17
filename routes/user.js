@@ -4,6 +4,7 @@ import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { userSchema } from "../validations/pathSchema.js";
 
 const router = express.Router();
 
@@ -11,13 +12,7 @@ const router = express.Router();
 router.post(
   "/register",
   asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
-
-    if (!username || !email || !password) {
-      const error = new Error(`Error invalid credidentals`);
-      error.statusCode = 400;
-      throw error;
-    }
+    const { username, email, password } = userSchema.parse(req.body);
 
     const isMatch = await User.findOne({ email });
 
@@ -33,7 +28,7 @@ router.post(
       password,
     });
 
-    const token = await jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
@@ -42,15 +37,10 @@ router.post(
 );
 
 // Login user
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-      const error = new Error(`Error invalid credidentals`);
-      error.statusCode = 400;
-      throw error;
-    }
+router.post(
+  "/login",
+  asyncHandler(async (req, res) => {
+    const { email, password } = userSchema.parse(req.body);
 
     const user = await User.findOne({ email });
 
@@ -68,15 +58,12 @@ router.post("/login", async (req, res) => {
       throw error;
     }
 
-    const token = await jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
       expiresIn: "1d",
     });
 
     res.status(200).json({ message: "User logged in", user, token });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: `Server error`, err });
-  }
-});
+  }),
+);
 
 export default router;
