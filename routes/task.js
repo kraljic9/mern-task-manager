@@ -61,6 +61,33 @@ router.post("/", auth, async (req, res) => {
 });
 // Edit task
 
+router.put("/:id", async (req, res) => {
+  try {
+    const { title, completed } = req.user;
+
+    if (!title || !completed) {
+      res.status(400).json({ message: `Error invalid credidentals` });
+    }
+
+    const task = Task.findById(id);
+
+    if (!task) {
+      return res.status(400).json(`Error task with id ${id} does not exists`);
+    }
+
+    task.title = title || task.title;
+    if (task.completed === undefined)
+      task.completed ? completed : task.completed;
+
+    const newTask = task.save();
+
+    res.status(201).json(newTask);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: `Server error`, err });
+  }
+});
+
 // Delete task
 
 export default router;
