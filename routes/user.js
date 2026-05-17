@@ -3,22 +3,28 @@ import mongoose from "mongoose";
 import express from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 const router = express.Router();
 
 // Register user
-router.post("/register", async (req, res) => {
-  try {
+router.post(
+  "/register",
+  asyncHandler(async (req, res) => {
     const { username, email, password } = req.body;
 
     if (!username || !email || !password) {
-      return res.status(400).json({ message: `Error invalid credidentals` });
+      const error = new Error(`Error invalid credidentals`);
+      error.statusCode = 400;
+      throw error;
     }
 
     const isMatch = await User.findOne({ email });
 
     if (isMatch) {
-      return res.status(400).json({ message: `Error user already exists` });
+      const error = new Error(`Error user already exists`);
+      error.statusCode = 400;
+      throw error;
     }
 
     const user = await User.create({
@@ -32,11 +38,8 @@ router.post("/register", async (req, res) => {
     });
 
     res.status(201).json({ user, token });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: `Server error`, err });
-  }
-});
+  }),
+);
 
 // Login user
 router.post("/login", async (req, res) => {
@@ -44,23 +47,25 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: `Error invalid credidentals` });
+      const error = new Error(`Error invalid credidentals`);
+      error.statusCode = 400;
+      throw error;
     }
 
     const user = await User.findOne({ email });
 
     if (!user) {
-      return res
-        .status(400)
-        .json({ message: `Error invalid email, user not found` });
+      const error = new Error(`Error invalid email, user not found`);
+      error.statusCode = 400;
+      throw error;
     }
 
     const isValid = await bcrypt.compare(password, user.password);
 
     if (!isValid) {
-      return res
-        .status(400)
-        .json({ message: `Error invalid password, user not found` });
+      const error = new Error(`Error invalid password, user not found`);
+      error.statusCode = 400;
+      throw error;
     }
 
     const token = await jwt.sign({ id: user.id }, process.env.JWT_SECRET, {
