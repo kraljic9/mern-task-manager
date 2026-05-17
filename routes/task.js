@@ -21,6 +21,23 @@ router.get("/", auth, async (req, res) => {
 
 // Get individual task
 
+router.get("/:id", auth, async (req, res) => {
+  try {
+    const id = req.params.id;
+
+    const task = await Task.findById(id);
+
+    if (!task) {
+      return res.status(400).json(`Error task with id ${id} does not exists`);
+    }
+
+    res.status(200).json(task);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: `Server error`, err });
+  }
+});
+
 // Create task
 
 router.post("/", auth, async (req, res) => {
